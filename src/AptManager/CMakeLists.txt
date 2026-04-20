@@ -15,6 +15,12 @@ qt_add_executable(AptManager
     car.h
     residentmanager.h
     residentmanager.cpp
+    dashboardpage.h
+    dashboardpage.cpp
+    residentpage.h
+    residentpage.cpp
+    parkingpage.h
+    parkingpage.cpp
 )
 
 target_link_libraries(AptManager

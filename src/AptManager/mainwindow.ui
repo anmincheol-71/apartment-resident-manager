@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>960</width>
-    <height>680</height>
+    <width>1000</width>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,100 +22,31 @@
     <property name="rightMargin"><number>0</number></property>
     <property name="bottomMargin"><number>0</number></property>
 
-    <!-- 헤더 -->
+    <!-- 네비게이션 바 -->
     <item>
-     <widget class="QWidget" name="headerWidget">
-      <property name="minimumSize">
-       <size><width>0</width><height>60</height></size>
-      </property>
-      <property name="maximumSize">
-       <size><width>16777215</width><height>60</height></size>
-      </property>
-      <layout class="QHBoxLayout" name="headerLayout">
-       <property name="leftMargin"><number>20</number></property>
-       <property name="rightMargin"><number>20</number></property>
-       <property name="topMargin"><number>0</number></property>
-       <property name="bottomMargin"><number>0</number></property>
-       <item>
-        <layout class="QVBoxLayout" name="titleLayout">
-         <property name="spacing"><number>2</number></property>
-         <item>
-          <widget class="QLabel" name="appTitleLabel">
-           <property name="text"><string>아파트 입주민 관리</string></property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="appSubLabel">
-           <property name="text"><string>입주민 · 차량 통합 관리 시스템</string></property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="headerSpacer">
-         <property name="orientation"><enum>Qt::Horizontal</enum></property>
-         <property name="sizeHint" stdset="0">
-          <size><width>40</width><height>20</height></size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-    </item>
-
-    <!-- 툴바 -->
-    <item>
-     <widget class="QWidget" name="toolbarWidget">
+     <widget class="QWidget" name="navWidget">
       <property name="minimumSize">
        <size><width>0</width><height>56</height></size>
       </property>
       <property name="maximumSize">
        <size><width>16777215</width><height>56</height></size>
       </property>
-      <layout class="QHBoxLayout" name="toolbarLayout">
-       <property name="leftMargin"><number>16</number></property>
-       <property name="rightMargin"><number>16</number></property>
-       <property name="topMargin"><number>10</number></property>
-       <property name="bottomMargin"><number>10</number></property>
-       <property name="spacing"><number>8</number></property>
+      <layout class="QHBoxLayout" name="navLayout">
+       <property name="leftMargin"><number>20</number></property>
+       <property name="rightMargin"><number>20</number></property>
+       <property name="topMargin"><number>0</number></property>
+       <property name="bottomMargin"><number>0</number></property>
+       <property name="spacing"><number>0</number></property>
 
+       <!-- 앱 타이틀 -->
        <item>
-        <widget class="QComboBox" name="searchFieldCombo">
-         <property name="minimumSize">
-          <size><width>90</width><height>0</height></size>
-         </property>
-         <item><property name="text"><string>이름</string></property></item>
-         <item><property name="text"><string>동</string></property></item>
-         <item><property name="text"><string>호</string></property></item>
-         <item><property name="text"><string>연락처</string></property></item>
+        <widget class="QLabel" name="navTitleLabel">
+         <property name="text"><string>아파트 입주민 관리</string></property>
         </widget>
        </item>
 
        <item>
-        <widget class="QLineEdit" name="searchEdit">
-         <property name="minimumSize">
-          <size><width>200</width><height>0</height></size>
-         </property>
-         <property name="placeholderText">
-          <string>검색어를 입력하세요</string>
-         </property>
-        </widget>
-       </item>
-
-       <item>
-        <widget class="QPushButton" name="searchBtn">
-         <property name="text"><string>검색</string></property>
-        </widget>
-       </item>
-
-       <item>
-        <widget class="QPushButton" name="clearBtn">
-         <property name="text"><string>전체보기</string></property>
-        </widget>
-       </item>
-
-       <item>
-        <spacer name="toolbarSpacer">
+        <spacer name="navLeftSpacer">
          <property name="orientation"><enum>Qt::Horizontal</enum></property>
          <property name="sizeHint" stdset="0">
           <size><width>40</width><height>20</height></size>
@@ -123,57 +54,39 @@
         </spacer>
        </item>
 
+       <!-- 네비 버튼 -->
        <item>
-        <widget class="QPushButton" name="addBtn">
-         <property name="text"><string>+ 등록</string></property>
+        <widget class="QPushButton" name="navHomeBtn">
+         <property name="text"><string>홈</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="navResidentBtn">
+         <property name="text"><string>입주민 관리</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="navParkingBtn">
+         <property name="text"><string>주차 현황</string></property>
         </widget>
        </item>
 
        <item>
-        <widget class="QPushButton" name="editBtn">
-         <property name="text"><string>수정</string></property>
-        </widget>
-       </item>
-
-       <item>
-        <widget class="QPushButton" name="deleteBtn">
-         <property name="text"><string>삭제</string></property>
-        </widget>
+        <spacer name="navRightSpacer">
+         <property name="orientation"><enum>Qt::Horizontal</enum></property>
+         <property name="sizeHint" stdset="0">
+          <size><width>40</width><height>20</height></size>
+         </property>
+        </spacer>
        </item>
 
       </layout>
      </widget>
     </item>
 
-    <!-- 테이블 -->
+    <!-- 페이지 스택 -->
     <item>
-     <widget class="QWidget" name="tableContainer">
-      <layout class="QVBoxLayout" name="tableLayout">
-       <property name="leftMargin"><number>16</number></property>
-       <property name="rightMargin"><number>16</number></property>
-       <property name="topMargin"><number>16</number></property>
-       <property name="bottomMargin"><number>16</number></property>
-       <item>
-        <widget class="QTableView" name="tableView">
-         <property name="showGrid">
-          <bool>false</bool>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
-         </property>
-         <property name="editTriggers">
-          <set>QAbstractItemView::NoEditTriggers</set>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
+     <widget class="QStackedWidget" name="stackedWidget"/>
     </item>
 
    </layout>

@@ -15,25 +15,19 @@ int main(int argc, char *argv[])
 QMainWindow { background: #F1F5F9; }
 QWidget#centralwidget { background: #F1F5F9; }
 
-/* ── 헤더 ── */
-QWidget#headerWidget {
+/* ── 네비게이션 바 ── */
+QWidget#navWidget {
     background: #0F172A;
 }
-QWidget#headerWidget QLabel {
+QWidget#navWidget QLabel {
     background: transparent;
     border: none;
-}
-QLabel#appTitleLabel {
     color: #F8FAFC;
     font-size: 15px;
     font-weight: bold;
 }
-QLabel#appSubLabel {
-    color: #475569;
-    font-size: 11px;
-}
 
-/* ── 툴바 ── */
+/* ── 툴바 (입주민 페이지) ── */
 QWidget#toolbarWidget {
     background: #FFFFFF;
     border-bottom: 1px solid #E2E8F0;

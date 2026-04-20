@@ -98,6 +98,22 @@ public:
     /** @brief 필터를 해제하고 전체 목록을 다시 보여준다. */
     void clearFilter();
 
+    // -------------------------------------------------------------
+    //  주차 관리
+    // -------------------------------------------------------------
+
+    /** @brief 전체 차량 목록 (주차 정보 포함). */
+    QList<Car> getAllCars();
+
+    /** @brief 현재 미주차 상태인 차량 목록. */
+    QList<Car> getUnparkedCars();
+
+    /** @brief 차량을 특정 자리에 입차 처리한다. */
+    bool parkCar(int carId, const QString &spotId);
+
+    /** @brief 차량을 출차 처리한다. */
+    bool unparkCar(int carId);
+
 signals:
     /**
      * @brief  데이터가 바뀌었을 때 방출되는 시그널.
@@ -109,6 +125,7 @@ private:
     QSqlTableModel *m_residentModel = nullptr;
 
     void populateDummyData();
+    void migrateSchema();
 };
 
 #endif // RESIDENTMANAGER_H

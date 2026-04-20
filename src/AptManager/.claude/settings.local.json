@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --build . --target AptManager)",
+      "Bash(\"/c/Qt/6.11.0/mingw_64/bin/qmake\" --version)",
+      "Bash(ls *.bat)",
+      "Bash(ls Makefile*)",
+      "Bash(\"/c/Qt/Tools/CMake_64/bin/cmake.exe\" --build . --target AptManager)"
+    ]
+  }
+}
