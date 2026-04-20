@@ -106,7 +106,9 @@ signals:
     void dataChanged();
 
 private:
-    QSqlTableModel *m_residentModel = nullptr;   ///< 입주민 메인 모델
+    QSqlTableModel *m_residentModel = nullptr;
+
+    void populateDummyData();
 };
 
 #endif // RESIDENTMANAGER_H

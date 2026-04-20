@@ -14,6 +14,7 @@ qt_add_executable(AptManager
     resident.h
     car.h
     residentmanager.h
+    residentmanager.cpp
 )
 
 target_link_libraries(AptManager
