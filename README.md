@@ -10,7 +10,7 @@
 | 이름 | 역할 | 담당 영역 |
 |---|---|---|
 | 정석 | UI / 프레젠테이션 | MainWindow, AddEditDialog, 스타일/리소스 |
-| [파트너 이름] | 데이터 / DB | DatabaseManager, ResidentManager, 스키마 |
+| 민철 | 데이터 / DB | DatabaseManager, ResidentManager, 스키마 |
 
 ---
 
