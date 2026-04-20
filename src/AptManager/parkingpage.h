@@ -17,7 +17,6 @@ public:
 
 private:
     QWidget* buildFloor(int floor, const QMap<QString, Car> &occupied);
-    void onSpotClicked(const QString &spotId, bool isOccupied);
 
     ResidentManager *m_mgr;
     QTabWidget *m_tabs;

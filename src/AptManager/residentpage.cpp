@@ -18,8 +18,20 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QColor>
+#include <QIdentityProxyModel>
 
-static const QStringList kSearchFields = {"name", "dong", "ho", "phone"};
+static const QStringList kSearchFields = {"name", "phone", "car_number"};
+
+// 모든 데이터 셀을 가운데 정렬하는 프록시
+class CenterAlignProxy : public QIdentityProxyModel {
+public:
+    using QIdentityProxyModel::QIdentityProxyModel;
+    QVariant data(const QModelIndex &index, int role) const override {
+        if (role == Qt::TextAlignmentRole)
+            return Qt::AlignCenter;
+        return QIdentityProxyModel::data(index, role);
+    }
+};
 
 ResidentPage::ResidentPage(ResidentManager *mgr, QWidget *parent)
     : QWidget(parent), m_mgr(mgr)
@@ -38,7 +50,7 @@ ResidentPage::ResidentPage(ResidentManager *mgr, QWidget *parent)
     tbLayout->setSpacing(8);
 
     m_searchField = new QComboBox(toolbar);
-    m_searchField->addItems({"이름", "동", "호", "연락처"});
+    m_searchField->addItems({"이름", "연락처", "차량번호"});
     m_searchField->setFixedWidth(90);
 
     m_searchEdit = new QLineEdit(toolbar);
@@ -74,15 +86,26 @@ ResidentPage::ResidentPage(ResidentManager *mgr, QWidget *parent)
     tcLayout->setContentsMargins(16, 16, 16, 16);
 
     m_table = new QTableView(tableContainer);
-    m_table->setModel(m_mgr->residentModel());
+    auto *proxy = new CenterAlignProxy(m_table);
+    proxy->setSourceModel(m_mgr->residentModel());
+    m_table->setModel(proxy);
     m_table->hideColumn(0);
-    m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->verticalHeader()->setVisible(false);
     m_table->setShowGrid(false);
     m_table->setAlternatingRowColors(true);
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->setSelectionMode(QAbstractItemView::SingleSelection);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_table->setSortingEnabled(true);
+
+    auto *hdr = m_table->horizontalHeader();
+    hdr->setSectionResizeMode(QHeaderView::Interactive);
+    m_table->setColumnWidth(1, 60);   // 동
+    m_table->setColumnWidth(2, 60);   // 호
+    m_table->setColumnWidth(3, 100);  // 이름
+    m_table->setColumnWidth(4, 130);  // 연락처
+    m_table->setColumnWidth(5, 100);  // 입주일
+    hdr->setStretchLastSection(true); // 메모 컬럼이 나머지 공간 차지
 
     tcLayout->addWidget(m_table);
 
@@ -103,8 +126,10 @@ int ResidentPage::selectedResidentId() const
 {
     QModelIndex idx = m_table->currentIndex();
     if (!idx.isValid()) return 0;
+    auto *proxy = qobject_cast<QIdentityProxyModel*>(m_table->model());
+    QModelIndex src = proxy ? proxy->mapToSource(idx) : idx;
     return m_mgr->residentModel()->data(
-        m_mgr->residentModel()->index(idx.row(), 0)
+        m_mgr->residentModel()->index(src.row(), 0)
     ).toInt();
 }
 
@@ -233,8 +258,10 @@ void ResidentPage::onClear()
 void ResidentPage::onRowDoubleClicked(const QModelIndex &index)
 {
     if (!index.isValid()) return;
+    auto *proxy = qobject_cast<QIdentityProxyModel*>(m_table->model());
+    QModelIndex src = proxy ? proxy->mapToSource(index) : index;
     int id = m_mgr->residentModel()->data(
-        m_mgr->residentModel()->index(index.row(), 0)).toInt();
+        m_mgr->residentModel()->index(src.row(), 0)).toInt();
     if (id == 0) return;
 
     Resident r    = m_mgr->getResidentById(id);

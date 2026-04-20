@@ -321,7 +321,12 @@ void ResidentManager::setSearchFilter(const QString &field, const QString &keywo
     if (keyword.isEmpty()) { clearFilter(); return; }
     QString escaped = keyword;
     escaped.replace("'", "''");
-    m_residentModel->setFilter(field + " LIKE '%" + escaped + "%'");
+    QString filter;
+    if (field == "car_number")
+        filter = QString("id IN (SELECT residentId FROM car WHERE carNumber LIKE '%%%1%%')").arg(escaped);
+    else
+        filter = field + " LIKE '%" + escaped + "%'";
+    m_residentModel->setFilter(filter);
     m_residentModel->select();
 }
 

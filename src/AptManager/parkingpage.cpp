@@ -6,8 +6,6 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QPushButton>
-#include <QMessageBox>
-#include <QInputDialog>
 #include <QScrollArea>
 #include <QFrame>
 
@@ -28,12 +26,12 @@ static QString makeSpotId(int floor, int row, int col)
 static const char *kStyleEmpty =
     "QPushButton { background:#22C55E; color:white; border-radius:6px;"
     "  font-size:11px; font-weight:bold; }"
-    "QPushButton:hover { background:#16A34A; }";
+    "QPushButton:disabled { background:#22C55E; color:white; }";
 
 static const char *kStyleOccupied =
     "QPushButton { background:#EF4444; color:white; border-radius:6px;"
     "  font-size:10px; font-weight:bold; }"
-    "QPushButton:hover { background:#DC2626; }";
+    "QPushButton:disabled { background:#EF4444; color:white; }";
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -83,8 +81,8 @@ ParkingPage::ParkingPage(ResidentManager *mgr, QWidget *parent)
         legend->addSpacing(20);
     };
     legend->addStretch();
-    addLeg("#22C55E", "빈 자리 (클릭: 입차)");
-    addLeg("#EF4444", "주차 중 (클릭: 출차)");
+    addLeg("#22C55E", "빈 자리");
+    addLeg("#EF4444", "주차 중");
     legend->addStretch();
     root->addLayout(legend);
 
@@ -178,17 +176,10 @@ QWidget* ParkingPage::buildFloor(int floor, const QMap<QString, Car> &occupied)
 
             auto *btn = new QPushButton(container);
             btn->setFixedSize(66, 56);
-            btn->setCursor(Qt::PointingHandCursor);
+            btn->setEnabled(false);
 
             if (occ) {
-                const Car &car = occupied[id];
-                Resident res   = m_mgr->getResidentById(car.residentId);
-                btn->setText(
-                    QString("%1%2\n%3\n%4동%5호")
-                        .arg(QChar('A' + r)).arg(c)
-                        .arg(car.carNumber)
-                        .arg(res.dong).arg(res.ho)
-                );
+                btn->setText(QString("%1%2\n주차 중").arg(QChar('A' + r)).arg(c));
                 btn->setStyleSheet(kStyleOccupied);
             } else {
                 btn->setText(QString("%1%2\n빈 자리").arg(QChar('A' + r)).arg(c));
@@ -198,83 +189,9 @@ QWidget* ParkingPage::buildFloor(int floor, const QMap<QString, Car> &occupied)
             // 좌(1–5): grid col c,  우(6–10): grid col c+1 (통로 건너뜀)
             int gridCol = (c <= 5) ? c : c + 1;
             grid->addWidget(btn, r + 1, gridCol);
-
-            connect(btn, &QPushButton::clicked, this,
-                [this, id, occ]() { onSpotClicked(id, occ); });
         }
     }
 
     return scroll;
 }
 
-void ParkingPage::onSpotClicked(const QString &spotId, bool isOccupied)
-{
-    QList<Car> allCars = m_mgr->getAllCars();
-
-    if (isOccupied) {
-        Car parkedCar;
-        for (const Car &c : allCars) {
-            if (c.parkingSpot == spotId && c.isParked) { parkedCar = c; break; }
-        }
-        Resident r = m_mgr->getResidentById(parkedCar.residentId);
-
-        // 자리 ID 파싱: "2-B7" → 2층, B7
-        QString floor  = spotId.section('-', 0, 0);
-        QString rowCol = spotId.section('-', 1);
-
-        QMessageBox mb(this);
-        mb.setWindowTitle("주차 정보");
-        mb.setTextFormat(Qt::RichText);
-        mb.setText(
-            QString(
-                "<table cellspacing='6'>"
-                "<tr><td><b>자리</b></td><td>%1층  %2</td></tr>"
-                "<tr><td><b>차량 번호</b></td><td>%3</td></tr>"
-                "<tr><td><b>세대주</b></td><td>%4  (%5동 %6호)</td></tr>"
-                "<tr><td><b>연락처</b></td><td>%7</td></tr>"
-                "</table>"
-            )
-            .arg(floor, rowCol, parkedCar.carNumber, r.name)
-            .arg(r.dong).arg(r.ho)
-            .arg(r.phone.isEmpty() ? "-" : r.phone)
-        );
-        auto *outBtn = mb.addButton("출차", QMessageBox::AcceptRole);
-        mb.addButton("닫기", QMessageBox::RejectRole);
-        mb.exec();
-
-        if (mb.clickedButton() == outBtn) {
-            m_mgr->unparkCar(parkedCar.id);
-            refresh();
-        }
-    } else {
-        QList<Car> unparked = m_mgr->getUnparkedCars();
-        if (unparked.isEmpty()) {
-            QMessageBox::information(this, "알림", "입차 가능한 차량이 없습니다.");
-            return;
-        }
-
-        QString floor  = spotId.section('-', 0, 0);
-        QString rowCol = spotId.section('-', 1);
-
-        QStringList items;
-        for (const Car &c : unparked) {
-            Resident res = m_mgr->getResidentById(c.residentId);
-            items << QString("%1   —   %2동 %3호  %4")
-                        .arg(c.carNumber).arg(res.dong).arg(res.ho).arg(res.name);
-        }
-
-        bool ok;
-        QString sel = QInputDialog::getItem(
-            this, "입차",
-            QString("%1층 %2 자리에 입차할 차량을 선택하세요.").arg(floor, rowCol),
-            items, 0, false, &ok
-        );
-        if (!ok) return;
-
-        int idx = items.indexOf(sel);
-        if (idx >= 0) {
-            m_mgr->parkCar(unparked[idx].id, spotId);
-            refresh();
-        }
-    }
-}
