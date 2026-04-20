@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(AptManager LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Sql)
 
 qt_standard_project_setup()
 
@@ -11,12 +11,16 @@ qt_add_executable(AptManager
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    resident.h
+    car.h
+    residentmanager.h
 )
 
 target_link_libraries(AptManager
     PRIVATE
-        Qt::Core
-        Qt::Widgets
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Sql
 )
 
 install(TARGETS AptManager
@@ -30,4 +34,5 @@ qt_generate_deploy_app_script(
     OUTPUT_SCRIPT deploy_script
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
+
 install(SCRIPT ${deploy_script})
