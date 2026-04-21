@@ -56,18 +56,8 @@
 
        <!-- 네비 버튼 -->
        <item>
-        <widget class="QPushButton" name="navHomeBtn">
-         <property name="text"><string>홈</string></property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="navResidentBtn">
          <property name="text"><string>입주민 관리</string></property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="navParkingBtn">
-         <property name="text"><string>주차 현황</string></property>
         </widget>
        </item>
 
