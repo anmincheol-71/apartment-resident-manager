@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -rn '\"mainwindow\\\\.h\"\\\\|\"cctvutils\\\\.h\"\\\\|\"resident\\\\.h\"\\\\|\"car\\\\.h\"\\\\|\"residentmanager\\\\.h\"\\\\|\"residentpage\\\\.h\"\\\\|\"securityalert\\\\.h\"\\\\|\"securityalertmanager\\\\.h\"\\\\|\"alerthistorypage\\\\.h\"\\\\|\"alertpopup\\\\.h\"\\\\|\"notice\\\\.h\"\\\\|\"noticemanager\\\\.h\"\\\\|\"noticedialog\\\\.h\"\\\\|\"noticepage\\\\.h\"\\\\|\"residentpage\\\\.moc\"\\\\|\"ui_mainwindow\\\\.h\"' *.h *.cpp CMakeLists.txt)",
+      "Bash(grep -E '\\\\.\\(h|cpp|ui\\)$' CMakeLists.txt)"
+    ]
+  }
+}

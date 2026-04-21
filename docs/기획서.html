@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기획서 — 아파트 입주민 관리</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 11pt;
+    color: #1a1a1a;
+    line-height: 1.9;
+    background: #e8e8e8;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 10mm auto;
+    background: white;
+    padding: 22mm 25mm 22mm 25mm;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  /* ── 커버 ── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 253mm;
+  }
+
+  .cover-top {
+    border-top: 3px solid #1565C0;
+    padding-top: 36px;
+    margin-bottom: 48px;
+  }
+
+  .cover-label {
+    font-size: 10pt;
+    color: #1565C0;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .cover h1 {
+    font-size: 26pt;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+
+  .cover .cover-sub {
+    font-size: 13pt;
+    color: #546e7a;
+  }
+
+  .cover-bottom {
+    border-top: 1px solid #CFD8DC;
+    padding-top: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cover-info {
+    display: flex;
+    gap: 24px;
+    font-size: 11pt;
+    color: #37474f;
+  }
+
+  .cover-info-label {
+    color: #90a4ae;
+    min-width: 56px;
+  }
+
+  /* ── 본문 공통 ── */
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1565C0;
+    margin: 38px 0 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #1565C0;
+  }
+
+  h2:first-of-type { margin-top: 0; }
+
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: #263238;
+    margin: 22px 0 8px;
+  }
+
+  p {
+    color: #37474f;
+    margin-bottom: 12px;
+    text-align: justify;
+  }
+
+  /* ── 테이블 ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: 10pt;
+  }
+
+  th {
+    background: #37474F;
+    color: white;
+    padding: 7px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 6px 12px;
+    border-bottom: 1px solid #ECEFF1;
+    color: #37474f;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: #F5F7FA; }
+
+  .td-mono {
+    font-family: 'Consolas', monospace;
+    font-size: 9.5pt;
+    color: #37474f;
+  }
+
+  /* ── UI 화면 예시 ── */
+  .screen-wrap {
+    margin: 16px 0 20px;
+    border: 1px solid #CFD8DC;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 10pt;
+  }
+
+  .screen-nav {
+    background: #263238;
+    color: white;
+    padding: 9px 16px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .screen-nav-title {
+    font-weight: 700;
+    font-size: 10pt;
+    flex: 1;
+  }
+
+  .screen-nav-btn {
+    padding: 4px 14px;
+    font-size: 9pt;
+    border-left: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.8);
+  }
+
+  .screen-nav-btn.active {
+    background: rgba(255,255,255,0.15);
+    color: white;
+  }
+
+  .screen-body {
+    display: flex;
+    min-height: 80px;
+  }
+
+  .screen-content {
+    flex: 1;
+    padding: 14px 16px;
+    background: #FAFAFA;
+    color: #78909C;
+    font-size: 9.5pt;
+    line-height: 1.7;
+  }
+
+  .screen-status {
+    background: #ECEFF1;
+    padding: 5px 16px;
+    font-size: 9pt;
+    color: #78909C;
+  }
+
+  /* ── 팝업 박스 ── */
+  .popup-wrap {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+    margin: 14px 0 20px;
+  }
+
+  .popup-box {
+    flex: 0 0 auto;
+    width: 220px;
+    background: #212121;
+    border-radius: 7px;
+    overflow: hidden;
+    font-size: 9.5pt;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  }
+
+  .popup-head {
+    background: #B71C1C;
+    color: white;
+    padding: 9px 14px;
+    font-weight: 700;
+    font-size: 10pt;
+  }
+
+  .popup-body {
+    padding: 11px 14px;
+    color: #EEEEEE;
+    line-height: 1.9;
+  }
+
+  .popup-btns {
+    background: #1A1A1A;
+    padding: 9px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .popup-btn-row { display: flex; gap: 5px; }
+
+  .pb-red    { flex:1; background:#E53935; color:white; border-radius:4px; padding:4px 8px; text-align:center; font-size:8.5pt; }
+  .pb-gray   { flex:1; background:#555;   color:white; border-radius:4px; padding:4px 8px; text-align:center; font-size:8.5pt; }
+  .pb-orange { background:#E65100; color:white; border-radius:4px; padding:4px 8px; text-align:center; font-size:8.5pt; }
+
+  .popup-desc {
+    flex: 1;
+    font-size: 10pt;
+    color: #37474f;
+    line-height: 1.8;
+    padding-top: 4px;
+  }
+
+  /* ── ERD 자리 ── */
+  .erd-slot {
+    border: 2px dashed #B0BEC5;
+    border-radius: 6px;
+    padding: 28px;
+    text-align: center;
+    color: #90A4AE;
+    margin: 14px 0 20px;
+    font-size: 10pt;
+  }
+
+  .erd-slot img { max-width: 100%; border-radius: 4px; }
+
+  /* ── 일정 ── */
+  .schedule {
+    margin: 14px 0 0;
+  }
+
+  .sch-row {
+    display: flex;
+    margin-bottom: 8px;
+    border: 1px solid #ECEFF1;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 10pt;
+  }
+
+  .sch-day {
+    background: #37474F;
+    color: white;
+    padding: 10px 16px;
+    font-weight: 700;
+    min-width: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sch-cell {
+    flex: 1;
+    padding: 9px 14px;
+    color: #37474f;
+    border-left: 1px solid #ECEFF1;
+  }
+
+  .sch-cell:first-child { border-left: none; }
+
+  .sch-label {
+    font-size: 8.5pt;
+    color: #90A4AE;
+    margin-bottom: 2px;
+  }
+
+  @media print {
+    body { background: white; }
+    .page {
+      width: 100%;
+      margin: 0;
+      padding: 20mm 25mm;
+      box-shadow: none;
+      page-break-after: always;
+    }
+    .page:last-child { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ 표지 ══════════════ -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-top">
+      <div class="cover-label">VEDA 심화실습평가 1 &nbsp;·&nbsp; Qt 데스크톱 프로그래밍</div>
+      <h1>아파트 입주민<br>관리 시스템</h1>
+      <div class="cover-sub">프로젝트 기획서</div>
+    </div>
+    <div class="cover-bottom">
+      <div class="cover-info">
+        <span class="cover-info-label">조</span>
+        <span>7조</span>
+      </div>
+      <div class="cover-info">
+        <span class="cover-info-label">팀원</span>
+        <span>안민철 · 이정석</span>
+      </div>
+      <div class="cover-info">
+        <span class="cover-info-label">개발 환경</span>
+        <span>Qt 6 · C++17 · SQLite</span>
+      </div>
+      <div class="cover-info">
+        <span class="cover-info-label">개발 기간</span>
+        <span>3일</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 본문 1 ══════════════ -->
+<div class="page">
+
+  <h2>1. 프로젝트 개요</h2>
+
+  <p>
+    본 프로젝트는 아파트 관리사무소 담당자가 입주민 정보 관리, 보안 이상징후 모니터링,
+    입주민 공지사항 발송을 하나의 프로그램에서 처리할 수 있도록 개발한 Qt 기반 데스크톱
+    관리 시스템이다. 데이터 저장은 별도 서버 없이 로컬 SQLite DB를 사용하며,
+    Qt6의 Multimedia 모듈을 활용해 CCTV 영상 재생 기능도 내장하였다.
+  </p>
+
+  <p>
+    화면은 상단 네비게이션 바와 QStackedWidget 구조로 구성되어 있으며,
+    입주민 관리 · 보안 알림 내역 · 공지사항 세 페이지를 탭처럼 전환하는 방식을 택했다.
+    하단 상태바에는 총 등록 세대 수와 미확인 보안 알림 건수가 실시간으로 표시된다.
+  </p>
+
+
+  <h2>2. 요구사항 및 기능 정의</h2>
+
+  <h3>입주민 정보 관리 (CRUD)</h3>
+
+  <p>
+    입주민의 동·호·이름·연락처·입주일·메모를 등록·수정·삭제할 수 있으며,
+    세대당 차량을 최대 3대까지 함께 관리한다.
+    입주민을 삭제하면 연결된 차량 정보도 자동으로 삭제되도록
+    SQLite 외래 키 제약(ON DELETE CASCADE)을 적용하였다.
+  </p>
+
+  <p>
+    검색은 이름, 연락처, 차량번호 세 가지 기준을 지원한다.
+    차량번호 검색의 경우 resident 테이블과 car 테이블이 분리되어 있어
+    서브쿼리를 활용하여 해당 차량을 소유한 입주민을 조회한다.
+    목록 테이블에서 차량번호 열은 GROUP_CONCAT 집계 함수로 다중 차량을 한 셀에 표시하며,
+    이를 위해 QAbstractProxyModel을 서브클래싱하여 동적으로 열을 추가하는 방식을 구현하였다.
+  </p>
+
+  <h3>CCTV 보안 알림</h3>
+
+  <p>
+    이상징후가 감지되면 화면 우측 하단에 경고 팝업이 항상 최상단에 고정되어 표시된다.
+    팝업에서는 발생 위치·유형·시각 확인, CCTV 영상 재생, 확인 완료 처리,
+    공지사항 등록을 바로 수행할 수 있다. 프로그램 시작 5초 후에는
+    지하주차장 침입 감지 시나리오가, 12초 후에는 단지 내 의심인물 배회 시나리오가
+    자동으로 실행되어 실제 운용 상황을 시연할 수 있도록 하였다.
+  </p>
+
+  <h3>공지사항</h3>
+
+  <p>
+    공지는 일반 · 보안경고 · 주의인물 세 가지 유형으로 작성할 수 있으며,
+    수신 대상은 전체 세대, 특정 동, 특정 세대 단위로 지정할 수 있다.
+    동·호 목록은 입주민 DB에서 실시간으로 불러오므로 별도 입력 없이
+    콤보박스에서 선택하는 방식이다.
+    보안 알림 팝업의 '주의 공지 등록' 버튼을 누르면 알림 유형을 분석해
+    공지 유형과 제목이 자동으로 채워진 상태로 작성 창이 열려 빠른 등록이 가능하다.
+  </p>
+
+</div>
+
+<!-- ══════════════ 본문 2 ══════════════ -->
+<div class="page">
+
+  <h2>3. UI / UX 설계</h2>
+
+  <p>
+    전체 화면은 상단 네비게이션 바와 콘텐츠 영역으로 나뉜다.
+    네비게이션 버튼을 클릭하면 QStackedWidget이 해당 페이지로 전환되며,
+    각 페이지는 독립적인 레이아웃을 가진다.
+  </p>
+
+  <div class="screen-wrap">
+    <div class="screen-nav">
+      <div class="screen-nav-title">아파트 입주민 관리</div>
+      <div class="screen-nav-btn active">입주민 관리</div>
+      <div class="screen-nav-btn">보안 알림 내역</div>
+      <div class="screen-nav-btn">공지사항</div>
+    </div>
+    <div class="screen-body">
+      <div class="screen-content">
+        [ 검색 기준 ▼ ] &nbsp; 검색어 입력 &nbsp; [검색] [전체보기] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [+ 등록] [수정] [삭제]<br><br>
+        동 &nbsp;| 호 &nbsp;| 이름 | 연락처 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 입주일 &nbsp;&nbsp;&nbsp;| 차량번호 &nbsp;&nbsp;&nbsp;&nbsp;| 메모<br>
+        101 | 101 | 김민준 | 010-1234-5678 | 2021-03-15 | 12가1234 &nbsp;&nbsp;&nbsp;&nbsp;|<br>
+        101 | 201 | 이서연 | 010-2345-6789 | 2020-07-22 | 34나5678, 56다9012 | 반려동물 있음
+      </div>
+    </div>
+    <div class="screen-status">총 60세대 등록 &nbsp;|&nbsp; 🔴 미확인 보안 알림 1건</div>
+  </div>
+
+  <p>
+    입주민 관리 페이지에서 행을 더블클릭하면 세대 상세정보 팝업이 열리며,
+    등록 차량 목록을 확인하고 수정 버튼으로 바로 편집할 수 있다.
+    보안 알림 내역 페이지에서는 이력 테이블의 행을 더블클릭하면
+    해당 알림의 CCTV 영상이 별도 창에서 재생된다.
+  </p>
+
+  <h3>보안 알림 팝업</h3>
+
+  <p>
+    이상징후 발생 시 아래와 같은 팝업이 화면 우측 하단에 항상 최상단으로 고정 표시된다.
+    Qt::Tool · FramelessWindowHint · WindowStaysOnTopHint 플래그를 조합하여
+    다른 창에 가리지 않도록 구현하였다.
+  </p>
+
+  <div class="popup-wrap">
+    <div class="popup-box">
+      <div class="popup-head">🚨 &nbsp;보안 이상징후 감지</div>
+      <div class="popup-body">
+        📍 위치 : 101동 지하주차장<br>
+        ⚠️ &nbsp;유형 : 침입<br>
+        🕐 시각 : 2025-01-01 &nbsp;09:05:00
+      </div>
+      <div class="popup-btns">
+        <div class="popup-btn-row">
+          <div class="pb-red">CCTV 영상 확인</div>
+          <div class="pb-gray">확인 완료</div>
+        </div>
+        <div class="pb-orange">📋 &nbsp;주의 공지 등록</div>
+      </div>
+    </div>
+    <div class="popup-desc">
+      확인 완료 버튼을 누르면 DB에 확인 처리가 기록되고 팝업이 닫힌다.
+      주의 공지 등록 버튼을 누르면 알림 유형을 자동 분석하여
+      공지 유형과 제목이 미리 채워진 상태로 공지 작성 창이 열린다.
+      배회·의심·이상행동 유형은 주의인물 공지로,
+      침입·화재 등 나머지는 보안경고 공지로 자동 분류된다.
+    </div>
+  </div>
+
+  <h2>4. 데이터 구조</h2>
+
+  <p>
+    데이터는 SQLite 파일 하나에 네 개의 테이블로 관리된다.
+    입주민(resident)과 차량(car)은 1:N 관계로 연결되며,
+    보안 알림(security_alert)과 공지사항(notice)은 독립적으로 저장된다.
+  </p>
+
+  <div class="erd-slot">
+    <!-- <img src="erd.png" alt="ERD 다이어그램"> -->
+    📌 ERD 다이어그램 이미지 삽입
+  </div>
+
+  <table>
+    <tr>
+      <th>테이블</th>
+      <th>주요 컬럼</th>
+      <th>비고</th>
+    </tr>
+    <tr>
+      <td>resident</td>
+      <td class="td-mono">id, dong, ho, name, phone, moveInDate, memo</td>
+      <td>dong + ho 조합 UNIQUE 제약</td>
+    </tr>
+    <tr>
+      <td>car</td>
+      <td class="td-mono">id, residentId(FK), carNumber</td>
+      <td>입주민 삭제 시 CASCADE 삭제</td>
+    </tr>
+    <tr>
+      <td>security_alert</td>
+      <td class="td-mono">id, occurredAt, location, type, videoPath, isConfirmed</td>
+      <td>isConfirmed: 0 미확인 / 1 확인</td>
+    </tr>
+    <tr>
+      <td>notice</td>
+      <td class="td-mono">id, createdAt, type, title, content, videoPath, targetType, targetDong, targetHo</td>
+      <td>targetType: 전체 / 동 / 세대</td>
+    </tr>
+  </table>
+
+  <h2>5. 개발 일정</h2>
+
+  <p>
+    총 3일의 개발 기간 동안 기능 단위로 순차 개발을 진행하였다.
+    1일차에 전체 설계와 입주민 CRUD를 완성한 뒤,
+    2일차에 보안 알림과 공지사항 기능을 추가하고,
+    3일차에 통합 테스트와 기획서 작성으로 마무리하였다.
+  </p>
+
+  <div class="schedule">
+    <div class="sch-row">
+      <div class="sch-day">1일차</div>
+      <div class="sch-cell">
+        <div class="sch-label">오전</div>
+        개발 계획 수립 · 화면 설계 · DB 스키마 설계
+      </div>
+      <div class="sch-cell">
+        <div class="sch-label">오후</div>
+        입주민 관리 CRUD 개발 (resident, car)
+      </div>
+    </div>
+    <div class="sch-row">
+      <div class="sch-day">2일차</div>
+      <div class="sch-cell">
+        <div class="sch-label">오전</div>
+        CCTV 보안 알림 팝업 및 이력 페이지 개발
+      </div>
+      <div class="sch-cell">
+        <div class="sch-label">오후</div>
+        공지사항 페이지 및 알림 연동 기능 개발
+      </div>
+    </div>
+    <div class="sch-row">
+      <div class="sch-day">3일차</div>
+      <div class="sch-cell">
+        <div class="sch-label">오전</div>
+        통합 테스트 · 버그 수정 · 코드 정리
+      </div>
+      <div class="sch-cell">
+        <div class="sch-label">오후</div>
+        기획서 작성 마무리
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -7,8 +7,8 @@
 // #include <QSqlTableModel>
 #include <QtSql/QSqlTableModel>
 
-#include "resident.h"
-#include "car.h"
+#include "01_resident.h"
+#include "01_car.h"
 
 class ResidentManager : public QObject {
 private:

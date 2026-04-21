@@ -1,4 +1,4 @@
-#include "residentmanager.h"
+#include "01_residentmanager.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -101,13 +101,13 @@ Resident ResidentManager::getResidentById(int id)
     q.prepare("SELECT id, dong, ho, name, phone, moveInDate, memo FROM resident WHERE id = ?");
     q.addBindValue(id);
     if (q.exec() && q.next()) {
-        r.id         = q.value(0).toInt();
-        r.dong       = q.value(1).toInt();
-        r.ho         = q.value(2).toInt();
-        r.name       = q.value(3).toString();
-        r.phone      = q.value(4).toString();
+        r.id = q.value(0).toInt();
+        r.dong = q.value(1).toInt();
+        r.ho = q.value(2).toInt();
+        r.name = q.value(3).toString();
+        r.phone = q.value(4).toString();
         r.moveInDate = QDate::fromString(q.value(5).toString(), Qt::ISODate);
-        r.memo       = q.value(6).toString();
+        r.memo = q.value(6).toString();
     }
     return r;
 }
@@ -116,9 +116,9 @@ Resident ResidentManager::getResidentById(int id)
 static Car rowToCar(const QSqlQuery &q)
 {
     Car c;
-    c.id          = q.value(0).toInt();
-    c.residentId  = q.value(1).toInt();
-    c.carNumber   = q.value(2).toString();
+    c.id = q.value(0).toInt();
+    c.residentId = q.value(1).toInt();
+    c.carNumber = q.value(2).toString();
     return c;
 }
 

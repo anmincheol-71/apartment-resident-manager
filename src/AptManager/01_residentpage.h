@@ -2,7 +2,7 @@
 #define RESIDENTPAGE_H
 
 #include <QWidget>
-#include "residentmanager.h"
+#include "01_residentmanager.h"
 
 class QTableView;
 class QLineEdit;
