@@ -1,131 +1,84 @@
 #ifndef RESIDENTMANAGER_H
 #define RESIDENTMANAGER_H
 
-/**
- * @file    residentmanager.h
- * @brief   입주민 / 차량 CRUD 비즈니스 로직 인터페이스
- * @note    UI 담당은 이 헤더에 선언된 public 시그니처만 신뢰하고 호출한다.
- *          DB 담당은 이 시그니처를 변경하지 않는 범위 내에서 내부 구현을 작성한다.
- *          시그니처 변경이 꼭 필요할 경우 양측이 함께 결정한다.
- */
-
 #include <QObject>
 #include <QList>
 #include <QString>
-#include <QSqlTableModel>
+// #include <QSqlTableModel>
+#include <QtSql/QSqlTableModel>
 
 #include "resident.h"
 #include "car.h"
 
-class ResidentManager : public QObject
-{
-    Q_OBJECT
+class ResidentManager : public QObject {
+private:
+    //signal이나 slot 등의 mos를 사용하려는 클래스에서 private 영역에 선언해야하는 매크로
+    Q_OBJECT // mos -> meta-object system은 object 간의 통신 매커니즘을 위한 시스템 제공
 
 public:
+    // 생성자
+    // explicit - 형변환 막는 키워드
+    // 부모 객체를 지정해 메모리 관리를 떠넘김 (부모가 해제되면 자식도 자동 해제)
     explicit ResidentManager(QObject *parent = nullptr);
+    // 소멸자 - 관리하는 동적 메모리나 리소스 없으니 비워두기
     ~ResidentManager();
 
-    // -------------------------------------------------------------
-    //  초기화
-    // -------------------------------------------------------------
-
-    /**
-     * @brief  SQLite DB 연결을 열고, 필요하면 스키마를 생성한다.
-     * @return 성공 시 true
-     * @note   MainWindow 생성 직후 한 번만 호출된다.
-     *         실패 시 UI 는 QMessageBox 로 치명적 오류를 표시하고 종료한다.
-     */
+    // sqlite DB 연결 - 성공하면 true
     bool initialize();
 
-    // -------------------------------------------------------------
-    //  Model / View 바인딩용
-    // -------------------------------------------------------------
-
-    /**
-     * @brief  QTableView 에 setModel() 로 붙일 입주민 테이블 모델.
-     * @return 내부 소유 QSqlTableModel 포인터 (delete 금지)
-     */
+    //
     QSqlTableModel* residentModel();
 
-    // -------------------------------------------------------------
-    //  조회
-    // -------------------------------------------------------------
-
-    /** @brief 특정 id 세대의 전체 정보를 반환한다. 없으면 id==0 인 기본값. */
+    // 입주민 구분번호를 통해 id 세대의 정보 반환
+    // 성공시 입주민 정보 반환 - Resident
     Resident getResidentById(int id);
 
-    /** @brief 특정 세대가 소유한 모든 차량 목록을 반환한다. */
+    // 입주민 구분번호를 통해 id 세대의 차량 정보 반환
+    // 성공시 차량정보를 리스트로 반환(여러대) - QList<Car>
     QList<Car> getCarsByResidentId(int residentId);
 
-    // -------------------------------------------------------------
-    //  등록 / 수정 / 삭제 (CRUD)
-    // -------------------------------------------------------------
-
-    /**
-     * @brief  새 세대를 등록한다. 차량이 있으면 함께 등록한다.
-     * @param  r            등록할 세대 정보 (id 는 무시되고 DB가 자동 부여)
-     * @param  carNumbers   함께 등록할 차량 번호 목록. 비어 있어도 OK.
-     * @return 성공 시 true. (중복 dong/ho 등 제약 위반 시 false)
-     */
+    // 입주민 등록 함수 - 성공시 true - bool
+    // r            등록할 세대 정보 (id는 DB 자동부여)
+    // carNumbers   등록할 차량 번호 목록
     bool addResident(const Resident &r, const QStringList &carNumbers);
 
-    /**
-     * @brief  기존 세대 정보를 갱신하고, 차량 목록도 교체한다.
-     * @param  r            수정할 세대 정보 (id 가 반드시 유효해야 함)
-     * @param  carNumbers   새 차량 번호 목록 (기존 차량은 이 목록으로 교체됨)
-     * @return 성공 시 true
-     */
+    // 입주민 정보 수정 함수 - 성공시 true - bool
+    // r            수정할 세대 정보 (id가 존재해야함 -> 바꿀 세대가 있어야함)
+    //        -> 어차피 목록에서 선택해야(여기서 이미 id 존재) 삭제 가능하니 굳이기도함)
+    // carNumbers   수정할 차량 번호 목록
     bool updateResident(const Resident &r, const QStringList &carNumbers);
 
-    /**
-     * @brief  세대를 삭제한다. FK CASCADE 로 연결된 차량도 함께 삭제된다.
-     * @param  id   삭제 대상 세대의 id
-     */
+    // 입주민 정보 삭제 함수 - 성공시 true - bool
+    // id   삭제할 세대 정보 (수정과 마찬가지로 id는 존재해야함
+    //        -> 어차피 목록에서 선택해야(여기서 이미 id 존재) 삭제 가능하니 굳이기도함)
     bool removeResident(int id);
 
-    // -------------------------------------------------------------
-    //  검색 / 필터
-    // -------------------------------------------------------------
-
-    /**
-     * @brief  residentModel 에 필터를 걸어 검색 결과만 노출한다.
-     * @param  field   검색 기준 컬럼명 ("name", "dong", "ho", "phone")
-     * @param  keyword 검색어. 부분 일치(LIKE '%keyword%') 로 처리된다.
-     * @note   빈 keyword 는 clearFilter() 와 동일하게 동작한다.
-     */
+    // 검색 함수 - 화면으로 출력하니 void
+    // field    검색 기준 (이름, 전화번호, 차량번호 등등)
+    // keyword  검색어
     void setSearchFilter(const QString &field, const QString &keyword);
 
-    /** @brief 필터를 해제하고 전체 목록을 다시 보여준다. */
+    // 검색결과 없애고 전체 입주민 출력 - 화면으로 출력하니 void
     void clearFilter();
 
-    // -------------------------------------------------------------
-    //  주차 관리
-    // -------------------------------------------------------------
-
-    /** @brief 전체 차량 목록 (주차 정보 포함). */
+    // 전체 차량 목록 불러오기 - (여러대) - QList<Car>
     QList<Car> getAllCars();
 
-    /** @brief 현재 미주차 상태인 차량 목록. */
-    QList<Car> getUnparkedCars();
-
-    /** @brief 차량을 특정 자리에 입차 처리한다. */
-    bool parkCar(int carId, const QString &spotId);
-
-    /** @brief 차량을 출차 처리한다. */
-    bool unparkCar(int carId);
+    // 더미데이터 생성 함수 - 테스트용도
+    void populateDummyData();
 
 signals:
-    /**
-     * @brief  데이터가 바뀌었을 때 방출되는 시그널.
-     *         UI 는 이것을 받아 상태바의 "총 N세대" 같은 표시를 갱신한다.
-     */
+    // 데이터가 바뀌었을 때 방출되는 시그널
+    // UI 는 이것을 받아 상태바의 "총 N세대" 같은 표시 업데이트함
     void dataChanged();
 
 private:
+    // 입주민 DB 매핑 함수
     QSqlTableModel *m_residentModel = nullptr;
 
-    void populateDummyData();
-    void migrateSchema();
+    // 스키마 생성 및 수정 함수
+    // void migrateSchema();
+
 };
 
 #endif // RESIDENTMANAGER_H

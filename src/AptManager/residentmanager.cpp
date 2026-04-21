@@ -6,25 +6,33 @@
 #include <QDir>
 #include <QDebug>
 
+// 생성자 정의
 ResidentManager::ResidentManager(QObject *parent)
     : QObject(parent)
 {}
 
+// 소멸자 정의
 ResidentManager::~ResidentManager() {}
 
+// DB 연결 정의
 bool ResidentManager::initialize()
 {
+    // DB 연결 객체 생성
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    // exe 생성 위치에 .db 파일 생성
     db.setDatabaseName(QDir::currentPath() + "/aptmanager.db");
 
+    // 연결 실패하면 false 반환 및 에러 출력
     if (!db.open()) {
         qWarning() << "DB 연결 실패:" << db.lastError().text();
         return false;
     }
 
+    // SQL문을 실행하고 결과 관리할 객체 생성
     QSqlQuery q;
     q.exec("PRAGMA foreign_keys = ON");
 
+    // SQL문 실행 -> resident 테이블 생성
     if (!q.exec(
         "CREATE TABLE IF NOT EXISTS resident ("
         "  id         INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -36,27 +44,24 @@ bool ResidentManager::initialize()
         "  memo       TEXT,"
         "  UNIQUE(dong, ho)"
         ")"))
-    {
+    { // 생성 실패
         qWarning() << "resident 테이블 생성 실패:" << q.lastError().text();
         return false;
     }
 
+    // SQL문 실행 -> car 테이블 생성
     if (!q.exec(
         "CREATE TABLE IF NOT EXISTS car ("
         "  id         INTEGER PRIMARY KEY AUTOINCREMENT,"
         "  residentId INTEGER NOT NULL,"
         "  carNumber  TEXT    NOT NULL,"
-        "  isParked   INTEGER DEFAULT 0,"
-        "  parkingSpot TEXT   DEFAULT '',"
+        " -- 외래 키 - 입주민 삭제되면 차량도 동시에 삭제하기 위함 \n"
         "  FOREIGN KEY(residentId) REFERENCES resident(id) ON DELETE CASCADE"
         ")"))
     {
         qWarning() << "car 테이블 생성 실패:" << q.lastError().text();
         return false;
     }
-
-    // 기존 DB에 컬럼이 없을 경우 마이그레이션
-    migrateSchema();
 
     m_residentModel = new QSqlTableModel(this);
     m_residentModel->setTable("resident");
@@ -70,6 +75,7 @@ bool ResidentManager::initialize()
     m_residentModel->setHeaderData(6, Qt::Horizontal, "메모");
     m_residentModel->setSort(1, Qt::AscendingOrder);
 
+    // 개수용 SQL 객체 생성
     QSqlQuery cnt;
     cnt.exec("SELECT COUNT(*) FROM resident");
     if (cnt.next() && cnt.value(0).toInt() == 0)
@@ -79,27 +85,15 @@ bool ResidentManager::initialize()
     return true;
 }
 
-void ResidentManager::migrateSchema()
-{
-    // car 테이블에 주차 관련 컬럼이 없으면 추가
-    QSqlQuery info;
-    info.exec("PRAGMA table_info(car)");
-    QStringList columns;
-    while (info.next())
-        columns << info.value(1).toString();
-
-    QSqlQuery q;
-    if (!columns.contains("isParked"))
-        q.exec("ALTER TABLE car ADD COLUMN isParked INTEGER DEFAULT 0");
-    if (!columns.contains("parkingSpot"))
-        q.exec("ALTER TABLE car ADD COLUMN parkingSpot TEXT DEFAULT ''");
-}
-
+// 객체의 포인터를 외부에서 사용할 수 있게 반환하는 게터함수
+// 캡슐화 및 UI에 쉽게 연결하기
 QSqlTableModel* ResidentManager::residentModel()
 {
     return m_residentModel;
 }
 
+// 입주민 구분번호를 통해 id 세대의 정보 반환
+// 성공시 입주민 정보 반환 - Resident
 Resident ResidentManager::getResidentById(int id)
 {
     Resident r;
@@ -118,23 +112,24 @@ Resident ResidentManager::getResidentById(int id)
     return r;
 }
 
+// 목록으로 불러온 차량 정보를 객체로 변환해줌
 static Car rowToCar(const QSqlQuery &q)
 {
     Car c;
     c.id          = q.value(0).toInt();
     c.residentId  = q.value(1).toInt();
     c.carNumber   = q.value(2).toString();
-    c.isParked    = q.value(3).toBool();
-    c.parkingSpot = q.value(4).toString();
     return c;
 }
 
+// 입주민 구분번호를 통해 id 세대의 차량 정보 반환
+// 성공시 차량정보를 리스트로 반환(여러대) - QList<Car>
 QList<Car> ResidentManager::getCarsByResidentId(int residentId)
 {
     QList<Car> cars;
     QSqlQuery q;
     q.prepare(
-        "SELECT id, residentId, carNumber, isParked, parkingSpot "
+        "SELECT id, residentId, carNumber "
         "FROM car WHERE residentId = ?"
     );
     q.addBindValue(residentId);
@@ -144,56 +139,25 @@ QList<Car> ResidentManager::getCarsByResidentId(int residentId)
     return cars;
 }
 
+// 전체 차량 목록 불러오기 - (여러대) - QList<Car>
 QList<Car> ResidentManager::getAllCars()
 {
     QList<Car> cars;
     QSqlQuery q(
-        "SELECT id, residentId, carNumber, isParked, parkingSpot FROM car"
+        "SELECT id, residentId, carNumber FROM car"
     );
     while (q.next())
         cars.append(rowToCar(q));
     return cars;
 }
 
-QList<Car> ResidentManager::getUnparkedCars()
-{
-    QList<Car> cars;
-    QSqlQuery q(
-        "SELECT id, residentId, carNumber, isParked, parkingSpot "
-        "FROM car WHERE isParked = 0"
-    );
-    while (q.next())
-        cars.append(rowToCar(q));
-    return cars;
-}
-
-bool ResidentManager::parkCar(int carId, const QString &spotId)
-{
-    // 해당 자리가 이미 점유됐는지 확인
-    QSqlQuery chk;
-    chk.prepare("SELECT id FROM car WHERE parkingSpot = ? AND isParked = 1");
-    chk.addBindValue(spotId);
-    chk.exec();
-    if (chk.next()) return false;
-
-    QSqlQuery q;
-    q.prepare("UPDATE car SET isParked = 1, parkingSpot = ? WHERE id = ?");
-    q.addBindValue(spotId);
-    q.addBindValue(carId);
-    return q.exec();
-}
-
-bool ResidentManager::unparkCar(int carId)
-{
-    QSqlQuery q;
-    q.prepare("UPDATE car SET isParked = 0, parkingSpot = '' WHERE id = ?");
-    q.addBindValue(carId);
-    return q.exec();
-}
-
+// 입주민 등록 함수 - 성공시 true - bool
+// r            등록할 세대 정보 (id는 DB 자동부여)
+// carNumbers   등록할 차량 번호 목록
 bool ResidentManager::addResident(const Resident &r, const QStringList &carNumbers)
 {
     QSqlDatabase db = QSqlDatabase::database();
+    // 입주민 등록과 차량 등록 중 하나라도 실패하면 모든 작업 취소 및 이전 상태로 롤백
     if (!db.transaction()) return false;
 
     QSqlQuery q;
@@ -214,10 +178,13 @@ bool ResidentManager::addResident(const Resident &r, const QStringList &carNumbe
         return false;
     }
 
+    // ID는 DB가 자동으로 생성해주는 값 사용
     int newId = q.lastInsertId().toInt();
 
     for (const QString &num : carNumbers) {
+        // 차량번호 앞뒤 공백 제거
         QString trimmed = num.trimmed();
+        // 빈 문자열 검사 - 차 없는 경우
         if (trimmed.isEmpty()) continue;
         QSqlQuery cq;
         cq.prepare("INSERT INTO car (residentId, carNumber) VALUES (?, ?)");
@@ -230,11 +197,17 @@ bool ResidentManager::addResident(const Resident &r, const QStringList &carNumbe
     }
 
     db.commit();
+    // DB 값들이 바뀌었으니 새로고침
     m_residentModel->select();
+    // 데이터 변경을 알림 -> 화면 갱신해라
     emit dataChanged();
     return true;
 }
 
+// 입주민 정보 수정 함수 - 성공시 true - bool
+// r            수정할 세대 정보 (id가 존재해야함 -> 바꿀 세대가 있어야함)
+//        -> 어차피 목록에서 선택해야(여기서 이미 id 존재) 삭제 가능하니 굳이기도함)
+// carNumbers   수정할 차량 번호 목록
 bool ResidentManager::updateResident(const Resident &r, const QStringList &carNumbers)
 {
     QSqlDatabase db = QSqlDatabase::database();
@@ -257,9 +230,6 @@ bool ResidentManager::updateResident(const Resident &r, const QStringList &carNu
         return false;
     }
 
-    // 차량 교체 시 기존 주차 상태 보존: 번호가 같으면 유지
-    QList<Car> oldCars = getCarsByResidentId(r.id);
-
     QSqlQuery dq;
     dq.prepare("DELETE FROM car WHERE residentId = ?");
     dq.addBindValue(r.id);
@@ -267,27 +237,15 @@ bool ResidentManager::updateResident(const Resident &r, const QStringList &carNu
 
     for (const QString &num : carNumbers) {
         QString trimmed = num.trimmed();
-        if (trimmed.isEmpty()) continue;
 
-        // 같은 번호의 기존 차량 주차 상태 복원
-        bool prevParked = false;
-        QString prevSpot;
-        for (const Car &old : oldCars) {
-            if (old.carNumber == trimmed) {
-                prevParked = old.isParked;
-                prevSpot   = old.parkingSpot;
-                break;
-            }
-        }
+        if (trimmed.isEmpty()) continue;
 
         QSqlQuery cq;
         cq.prepare(
-            "INSERT INTO car (residentId, carNumber, isParked, parkingSpot) VALUES (?, ?, ?, ?)"
+            "INSERT INTO car (residentId, carNumber) VALUES (?, ?)"
         );
         cq.addBindValue(r.id);
         cq.addBindValue(trimmed);
-        cq.addBindValue(prevParked ? 1 : 0);
-        cq.addBindValue(prevSpot);
         if (!cq.exec()) { db.rollback(); return false; }
     }
 
@@ -297,6 +255,9 @@ bool ResidentManager::updateResident(const Resident &r, const QStringList &carNu
     return true;
 }
 
+// 입주민 정보 삭제 함수 - 성공시 true - bool
+// id   삭제할 세대 정보 (수정과 마찬가지로 id는 존재해야함
+//        -> 어차피 목록에서 선택해야(여기서 이미 id 존재) 삭제 가능하니 굳이기도함)
 bool ResidentManager::removeResident(int id)
 {
     QSqlQuery fk;
@@ -316,13 +277,25 @@ bool ResidentManager::removeResident(int id)
     return true;
 }
 
+// 검색 함수 - 화면으로 출력하니 void
+// field    검색 기준 (이름, 전화번호, 차량번호 등등)
+// keyword  검색어
 void ResidentManager::setSearchFilter(const QString &field, const QString &keyword)
 {
+    // 빈 검색어
     if (keyword.isEmpty()) { clearFilter(); return; }
     QString escaped = keyword;
+    // SQL 인젝션 방어 - 이번에 새로 배움 -> ' 싱글 쿼터를 ''로 치환하여 문법 오류나 해킹 방지
     escaped.replace("'", "''");
     QString filter;
+    // LIKE %검색어% 면 위치 상관없이 포함되면 (대소문자 구분 X)
+    // %검색어 이면 검색어로 끝나는
+    // 검색어% 이면 검색어로 시작하는것만
+    // = 이건 정확히 일치
+    // IN 여러 후보 중 하나라도 있으면 등등 여러 검색조건 있음
     if (field == "car_number")
+        // 서브쿼리 사용
+        // car 테이블에서 주인 ID로 검색해서 가져오기
         filter = QString("id IN (SELECT residentId FROM car WHERE carNumber LIKE '%%%1%%')").arg(escaped);
     else
         filter = field + " LIKE '%" + escaped + "%'";
@@ -330,6 +303,7 @@ void ResidentManager::setSearchFilter(const QString &field, const QString &keywo
     m_residentModel->select();
 }
 
+// 검색결과 없애고 전체 입주민 출력 - 화면으로 출력하니 void
 void ResidentManager::clearFilter()
 {
     m_residentModel->setFilter(QString());
@@ -404,46 +378,22 @@ void ResidentManager::populateDummyData()
         {105, 1203, "류지아", "010-6576-7687", "2020-05-14", ""},
     };
 
-    // {residentIndex, carNumber, isParked, parkingSpot}
-    // spot ID 형식: "{층}-{행A/B/C}{열1-10}"  예) "1-A3", "2-C8"
-    struct C { int idx; const char *num; int parked; const char *spot; };
+    // {residentIndex, carNumber}
+    struct C { int idx; const char *num; };
     static const C cars[] = {
-        {0,  "12가1234",    1, "1-A1"},
-        {1,  "34나5678",    1, "1-A2"},
-        {1,  "56다9012",    0, ""},
-        {2,  "78라3456",    1, "1-A3"},
-        {3,  "90마7890",    1, "1-A4"},
-        {4,  "11바1234",    0, ""},
-        {5,  "22사5678",    1, "1-A5"},
-        {6,  "33아9012",    1, "1-B1"},
-        {7,  "44자3456",    0, ""},
-        {8,  "55차7890",    1, "2-A1"},
-        {9,  "66카1234",    1, "2-A2"},
-        {9,  "77타5678",    0, ""},
-        {10, "88파9012",    1, "2-A3"},
-        {11, "99하3456",    1, "2-A4"},
-        {12, "경기11가1111", 0, ""},
-        {13, "서울22나2222", 1, "2-A5"},
-        {14, "인천33다3333", 1, "2-B1"},
-        {15, "부산44라4444", 0, ""},
-        {16, "대구55마5555", 1, "3-A1"},
-        {17, "광주66바6666", 1, "3-A2"},
-        {17, "울산77사7777", 0, ""},
-        {18, "경기88아8888", 1, "3-A3"},
-        {19, "서울99자9999", 0, ""},
-        {20, "12나1357",    1, "3-A4"},
-        {21, "34다2468",    1, "3-A5"},
-        {22, "56라3579",    0, ""},
-        {23, "78마4680",    1, "1-B2"},
-        {23, "90바5791",    0, ""},
-        {24, "11사6802",    1, "1-B3"},
-        {25, "22아7913",    0, ""},
-        {26, "33자8024",    1, "2-B2"},
-        {27, "44차9135",    1, "2-B3"},
-        {28, "55카0246",    0, ""},
-        {29, "66타1357",    1, "3-B1"},
-    };
-
+                             {0,  "12가1234"}, {1,  "34나5678"}, {1,  "56다9012"},
+                             {2,  "78라3456"}, {3,  "90마7890"}, {4,  "11바1234"},
+                             {5,  "22사5678"}, {6,  "33아9012"}, {7,  "44자3456"},
+                             {8,  "55차7890"}, {9,  "66카1234"}, {9,  "77타5678"},
+                             {10, "88파9012"}, {11, "99하3456"}, {12, "경기11가1111"},
+                             {13, "서울22나2222"}, {14, "인천33다3333"}, {15, "부산44라4444"},
+                             {16, "대구55마5555"}, {17, "광주66바6666"}, {17, "울산77사7777"},
+                             {18, "경기88아8888"}, {19, "서울99자9999"}, {20, "12나1357"},
+                             {21, "34다2468"}, {22, "56라3579"}, {23, "78마4680"},
+                             {23, "90바5791"}, {24, "11사6802"}, {25, "22아7913"},
+                             {26, "33자8024"}, {27, "44차9135"}, {28, "55카0246"},
+                             {29, "66타1357"},
+                             };
     QSqlDatabase db = QSqlDatabase::database();
     db.transaction();
 
@@ -467,14 +417,12 @@ void ResidentManager::populateDummyData()
 
     QSqlQuery cq;
     cq.prepare(
-        "INSERT INTO car (residentId, carNumber, isParked, parkingSpot) VALUES (?, ?, ?, ?)"
+        "INSERT INTO car (residentId, carNumber) VALUES (?, ?)"
     );
     for (const auto &c : cars) {
         if (c.idx < ids.size()) {
             cq.addBindValue(ids[c.idx]);
             cq.addBindValue(QString::fromUtf8(c.num));
-            cq.addBindValue(c.parked);
-            cq.addBindValue(QString::fromUtf8(c.spot));
             cq.exec();
         }
     }

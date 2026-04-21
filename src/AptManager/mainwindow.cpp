@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QSqlQuery>
 
+// 생성자
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -30,11 +31,13 @@ MainWindow::MainWindow(QWidget *parent)
     updateStatusBar();
 }
 
+// 소멸자 ui 삭제
 MainWindow::~MainWindow()
 {
     delete ui;
 }
 
+// 상태바 업데이트 -> 총 세대수 카운트 및 출력
 void MainWindow::updateStatusBar()
 {
     QSqlQuery q("SELECT COUNT(*) FROM resident");

@@ -20,15 +20,21 @@
 #include <QColor>
 #include <QIdentityProxyModel>
 
+// 콤보 박스에 쓸 검색 기준들을 모아놓은 상수 모록ㄱ
 static const QStringList kSearchFields = {"name", "phone", "car_number"};
 
 // 모든 데이터 셀을 가운데 정렬하는 프록시
+// 원본 모델을 바꾸지않고 정렬만 수정하고 싶을 때 사용
 class CenterAlignProxy : public QIdentityProxyModel {
 public:
     using QIdentityProxyModel::QIdentityProxyModel;
+    // data 함수를 재정의 해서 반환함 -> 가운데 정의 하도록
     QVariant data(const QModelIndex &index, int role) const override {
+        // 글자 정렬 물어보는 상황
         if (role == Qt::TextAlignmentRole)
+            // 무조건 가운데 정렬
             return Qt::AlignCenter;
+        // 예외 경우는 원본 데이터 반환
         return QIdentityProxyModel::data(index, role);
     }
 };
