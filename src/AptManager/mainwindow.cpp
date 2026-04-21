@@ -8,7 +8,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , m_mgr(new ResidentManager(this))
+    , m_mgr(new ResidentManager(this)) // 백앤드 생성
 {
     ui->setupUi(this);
     setMenuBar(nullptr);
@@ -20,9 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // 페이지 생성
-    m_residentPage = new ResidentPage(m_mgr, this);
-    ui->stackedWidget->addWidget(m_residentPage);
-    ui->stackedWidget->setCurrentIndex(0);
+    m_residentPage = new ResidentPage(m_mgr, this); // UI 페이지 생성
+    ui->stackedWidget->addWidget(m_residentPage);   // 창에 페이지 추가
 
     // 데이터 변경 시 상태바 갱신
     connect(m_mgr, &ResidentManager::dataChanged, this, &MainWindow::updateStatusBar);

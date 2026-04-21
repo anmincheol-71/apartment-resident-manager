@@ -6,6 +6,50 @@
 #include <QDir>
 #include <QDebug>
 
+// 차량번호 컬럼을 추가한 커스텀 모델
+class ResidentTableModel : public QSqlTableModel {
+public:
+    using QSqlTableModel::QSqlTableModel;
+
+    // 컬럼 수: 기존 7개 + 차량번호 1개
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override {
+        return QSqlTableModel::columnCount(parent) + 1;
+    }
+
+    // 헤더 이름
+    QVariant headerData(int section, Qt::Orientation o, int role) const override {
+        if (o == Qt::Horizontal && role == Qt::DisplayRole
+                && section == QSqlTableModel::columnCount())
+            return "차량번호";
+        return QSqlTableModel::headerData(section, o, role);
+    }
+
+    // 셀 데이터
+    QVariant data(const QModelIndex &index, int role) const override {
+        if (index.column() == QSqlTableModel::columnCount()) {
+            if (role == Qt::DisplayRole) {
+                // 같은 행의 id(0번 컬럼)로 차량번호 조회
+                int residentId = QSqlTableModel::data(
+                    this->index(index.row(), 0)).toInt();
+                QSqlQuery q;
+                q.prepare("SELECT GROUP_CONCAT(carNumber, ', ') "
+                          "FROM car WHERE residentId = ?");
+                q.addBindValue(residentId);
+                q.exec();
+                if (q.next()) return q.value(0);
+            }
+            return QVariant();
+        }
+        return QSqlTableModel::data(index, role);
+    }
+
+    // 차량번호 컬럼은 정렬 무시
+    void sort(int column, Qt::SortOrder order) override {
+        if (column < QSqlTableModel::columnCount())
+            QSqlTableModel::sort(column, order);
+    }
+};
+
 ResidentManager::ResidentManager(QObject *parent)
     : QObject(parent)
 {}
@@ -58,7 +102,7 @@ bool ResidentManager::initialize()
     // 기존 DB에 컬럼이 없을 경우 마이그레이션
     migrateSchema();
 
-    m_residentModel = new QSqlTableModel(this);
+    m_residentModel = new ResidentTableModel(this);
     m_residentModel->setTable("resident");
     m_residentModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
     m_residentModel->setHeaderData(0, Qt::Horizontal, "ID");
